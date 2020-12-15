@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import { h, render } from "https://cdn.skypack.dev/preact";
+      import { useState } from "https://cdn.skypack.dev/preact/hooks";
+      import htm from "https://cdn.skypack.dev/htm";
+
+      const html = htm.bind(h);
+
+      const TabContent = ({ children }) => children;
+
+      const TabLabel = ({ children, name, onTabClick }) =>
+        html`<button role="tab" onClick=${() => onTabClick(name)}>
+          ${children}
+        </button>`;
+
+      const Tab = ({ children }) => children;
+
+      const TabGroup = ({ children, tab }) => {
+        const [_tab, setTab] = useState(tab);
+
+        return html`
+          <div role="tablist">
+            ${children.map(({ props: { children } }) =>
+              children.find(({ type, props }) => {
+                props.onTabClick = (name) => setTab(name);
+                return type.name === "TabLabel";
+              })
+            )}
+          </div>
+          <div role="tabpanel">
+            ${children
+              .find(({ props: { children } }) =>
+                children.some(
+                  ({ type, props: { name } }) =>
+                    type.name === "TabLabel" && name === _tab
+                )
+              )
+              .props.children.find(({ type }) => type.name === "TabContent")}
+          </div>
+        `;
+      };
+
+      const App = () =>
+        html`<h1>App</h1>
+          <${TabGroup} tab="third">
+            <${Tab}>
+              <${TabLabel} name="first">First Tab</${TabLabel}>
+              <${TabContent}>First tab content</${TabContent}>
+            </${Tab}>
+            <${Tab}>
+              <${TabLabel} name="second">Second Tab</${TabLabel}>
+              <${TabContent}>Second tab content</${TabContent}>
+            </${Tab}>
+            <${Tab}>
+              <${TabLabel} name="third">Third Tab</${TabLabel}>
+              <${TabContent}>Third tab content</${TabContent}>
+            </${Tab}>
+          </${TabGroup}>`;
+
+      render(html`<${App} />`, document.getElementById("root"));
+    </script>
+  </body>
+</html>
